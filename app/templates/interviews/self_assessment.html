@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Skill Self-Assessment - {{ role.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm p-4">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-semibold mb-2">
+                            Step 2 of 2: Confidence Calibration
+                        </span>
+                        <h3 class="fw-bold text-dark mt-1 mb-1">Pre-Interview Skill Self-Assessment</h3>
+                        <p class="text-muted small">
+                            Rate your confidence in each target competency for <strong>{{ role.title }}</strong> before your session begins.
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info border-start border-4 border-info small mb-4">
+                        <i class="bi bi-shield-check fs-5 me-2 align-middle"></i>
+                        <strong>Objective &amp; Non-Judgmental:</strong>
+                        Your ratings are compared side-by-side with demonstrated evidence to help you identify high-yield practice priorities. No candidate is ever penalized or labeled dishonest for self-assessment variations.
+                    </div>
+
+                    <form method="POST" action="{{ url_for('interviews.self_assessment', session_uuid=session.session_uuid) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            {% for skill in skills %}
+                            <div class="card border p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">{{ skill.name }}</h6>
+                                        {% if skill.description %}
+                                            <p class="text-muted small mb-0">{{ skill.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-light text-dark border text-capitalize">{{ skill.category }}</span>
+                                </div>
+
+                                <div class="mt-2">
+                                    <label class="form-label small fw-semibold text-secondary mb-2">Your Confidence Level:</label>
+                                    <div class="d-flex flex-wrap justify-content-between gap-2 bg-light p-2 rounded">
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="radio" name="rating_{{ skill.id }}" id="r_{{ skill.id }}_1" value="1" required>
+                                            <label class="form-check-label small" for="r_{{ skill.id }}_1">1 - New to it</label>
+                                        </div>
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="radio" name="rating_{{ skill.id }}" id="r_{{ skill.id }}_2" value="2">
+                                            <label class="form-check-label small" for="r_{{ skill.id }}_2">2 - Basic</label>
+                                        </div>
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="radio" name="rating_{{ skill.id }}" id="r_{{ skill.id }}_3" value="3" checked>
+                                            <label class="form-check-label small fw-semibold text-primary" for="r_{{ skill.id }}_3">3 - Working Knowledge</label>
+                                        </div>
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="radio" name="rating_{{ skill.id }}" id="r_{{ skill.id }}_4" value="4">
+                                            <label class="form-check-label small" for="r_{{ skill.id }}_4">4 - Confident</label>
+                                        </div>
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="radio" name="rating_{{ skill.id }}" id="r_{{ skill.id }}_5" value="5">
+                                            <label class="form-check-label small" for="r_{{ skill.id }}_5">5 - Expert</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('interviews.configure') }}" class="btn btn-outline-secondary">
+                                &larr; Back to Config
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold py-2">
+                                Begin Interview Session &rarr;
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_new %}Create Job Role{% else %}Edit {{ role.title }}{% endif %} - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm p-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold text-dark mb-0">
+                            {% if is_new %}
+                                <i class="bi bi-plus-circle-fill text-primary me-2"></i>Create New Job Role
+                            {% else %}
+                                <i class="bi bi-pencil-square text-primary me-2"></i>Edit Role: {{ role.title }}
+                            {% endif %}
+                        </h4>
+                        <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                    </div>
+
+                    <form method="POST" action="{% if is_new %}{{ url_for('admin.role_create') }}{% else %}{{ url_for('admin.role_edit', role_id=role.id) }}{% endif %}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.title.label.text }}</label>
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Cloud Solutions Architect") }}
+                                {% for err in form.title.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.slug.label.text }}</label>
+                                {{ form.slug(class="form-control" + (" is-invalid" if form.slug.errors else ""), placeholder="e.g. cloud-solutions-architect") }}
+                                {% for err in form.slug.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.description.label.text }}</label>
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4) }}
+                            {% for err in form.description.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.experience_level.label.text }}</label>
+                                {{ form.experience_level(class="form-select") }}
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center mt-4">
+                                <div class="form-check">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    <label class="form-check-label small fw-semibold text-secondary" for="{{ form.is_active.id }}">
+                                        {{ form.is_active.label.text }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.interview_topics_raw.label.text }}</label>
+                            {{ form.interview_topics_raw(class="form-control", rows=4, placeholder="Core Systems Design&#10;Database Partitioning&#10;Kubernetes & Containers") }}
+                            <div class="form-text small">Enter each structured topic on a separate line.</div>
+                        </div>
+
+                        <!-- Difficulty Distribution -->
+                        <div class="card bg-light border-0 p-3 mb-4">
+                            <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-pie-chart-fill text-primary me-1"></i>Difficulty Distribution (Target % Mix)</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-secondary">Easy %</label>
+                                    {{ form.easy_pct(class="form-control form-control-sm") }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-secondary">Medium %</label>
+                                    {{ form.medium_pct(class="form-control form-control-sm") }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-secondary">Hard %</label>
+                                    {{ form.hard_pct(class="form-control form-control-sm") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+                            <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

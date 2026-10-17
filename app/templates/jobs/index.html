@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Available Job Roles - Adaptive Interviewer{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-briefcase-fill text-primary me-2"></i>Job Roles Directory
+            </h2>
+            <p class="text-secondary mb-0">
+                Explore target engineering roles, competency weightings, and difficulty profiles to focus your interview preparation.
+            </p>
+        </div>
+        <div class="col-md-5 mt-3 mt-md-0">
+            <!-- Search & Filter Form -->
+            <form method="GET" action="{{ url_for('jobs.index') }}" class="d-flex gap-2">
+                <input type="text" name="q" value="{{ search_kw }}" class="form-control form-control-sm" placeholder="Search roles or skills...">
+                <select name="level" class="form-select form-select-sm" style="max-width: 150px;">
+                    <option value="">All Levels</option>
+                    {% for lvl in all_levels %}
+                        <option value="{{ lvl }}" {% if selected_level == lvl %}selected{% endif %}>{{ lvl }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm px-3">Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Job Roles Grid -->
+    <div class="row g-4">
+        {% for role in roles %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm d-flex flex-column">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-dark mb-0">
+                            <a href="{{ url_for('jobs.detail', slug=role.slug) }}" class="text-decoration-none text-dark">
+                                {{ role.title }}
+                            </a>
+                        </h5>
+                        <span class="badge bg-light text-dark border">{{ role.experience_level }}</span>
+                    </div>
+
+                    <p class="text-secondary small mb-3">{{ role.description }}</p>
+
+                    <!-- Difficulty Distribution Pills -->
+                    {% set diff = role.difficulty_distribution or {'easy': 30, 'medium': 50, 'hard': 20} %}
+                    <div class="mb-3">
+                        <div class="small fw-semibold text-dark mb-1">Target Difficulty Distribution:</div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: {{ diff.get('easy', 30) }}%;" title="Easy {{ diff.get('easy', 30) }}%"></div>
+                            <div class="progress-bar bg-warning" style="width: {{ diff.get('medium', 50) }}%;" title="Medium {{ diff.get('medium', 50) }}%"></div>
+                            <div class="progress-bar bg-danger" style="width: {{ diff.get('hard', 20) }}%;" title="Hard {{ diff.get('hard', 20) }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                            <span>Easy: {{ diff.get('easy', 30) }}%</span>
+                            <span>Med: {{ diff.get('medium', 50) }}%</span>
+                            <span>Hard: {{ diff.get('hard', 20) }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Required Skills -->
+                    <div class="mb-3">
+                        <div class="small fw-semibold text-dark mb-1">Target Skills Matrix:</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for jrs in role.role_skills %}
+                                <span class="badge {% if jrs.is_required %}bg-primary-subtle text-primary border border-primary-subtle{% else %}bg-light text-secondary border{% endif %} small">
+                                    {{ jrs.skill.name }}
+                                    {% if jrs.is_required %}<span class="text-danger fw-bold" title="Required Competency">*</span>{% endif %}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-top pt-2 pb-3 d-flex gap-2">
+                    <a href="{{ url_for('jobs.detail', slug=role.slug) }}" class="btn btn-outline-secondary btn-sm flex-grow-1">
+                        View Matrix &amp; Topics
+                    </a>
+                    {% if current_user.is_authenticated and current_user.is_candidate %}
+                        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-primary btn-sm flex-grow-1">
+                            Start Practice
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm flex-grow-1">
+                            Sign Up to Practice
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info py-4 text-center">
+                <i class="bi bi-search fs-3 d-block mb-2"></i>
+                No job roles matched your filter criteria. <a href="{{ url_for('jobs.index') }}">Reset filters</a>.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

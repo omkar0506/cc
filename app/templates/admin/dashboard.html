@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Dashboard - Adaptive Interviewer{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-shield-lock-fill text-danger me-2"></i>Administrator Portal
+            </h2>
+            <p class="text-secondary mb-0">System administration, competency management, AI provider telemetry, and audit logging.</p>
+        </div>
+        <div>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
+                Superuser Authorization
+            </span>
+        </div>
+    </div>
+
+    <!-- Admin Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md">
+            <div class="card p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Total Users</div>
+                <div class="fs-3 fw-bold text-dark">{{ users_count }}</div>
+                <small class="text-secondary">{{ candidate_count }} candidates</small>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Job Roles</div>
+                <div class="fs-3 fw-bold text-primary">{{ roles_count }}</div>
+                <small class="text-secondary">Seeded &amp; Custom</small>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Question Bank</div>
+                <div class="fs-3 fw-bold text-success">{{ questions_count }}</div>
+                <small class="text-secondary">Approved &amp; active</small>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Sessions Run</div>
+                <div class="fs-3 fw-bold text-info">{{ sessions_count }}</div>
+                <small class="text-secondary">All candidates</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Modules Nav Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 h-100 shadow-sm border-start border-4 border-primary">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-people-fill text-primary me-2"></i>User Accounts</h6>
+                <p class="small text-muted mb-3">Inspect accounts, candidate profiles, and role assignments.</p>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary btn-sm mt-auto">Manage Users &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100 shadow-sm border-start border-4 border-success">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-briefcase-fill text-success me-2"></i>Job Roles &amp; Matrix</h6>
+                <p class="small text-muted mb-3">Configure roles, competency weights, and difficulty mixes.</p>
+                <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-success btn-sm mt-auto">Manage Roles &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100 shadow-sm border-start border-4 border-info">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-tag-fill text-info me-2"></i>Skills Registry</h6>
+                <p class="small text-muted mb-3">Canonical competencies with resume alias dictionaries.</p>
+                <a href="{{ url_for('admin.skills') }}" class="btn btn-outline-info btn-sm mt-auto">Manage Skills &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100 shadow-sm border-start border-4 border-warning">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-question-square-fill text-warning me-2"></i>Question Bank</h6>
+                <p class="small text-muted mb-3">Vetted questions, expected concepts, and rubrics.</p>
+                <a href="{{ url_for('admin.questions') }}" class="btn btn-outline-warning btn-sm mt-auto">Manage Questions &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log Table (Real DB Records) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center py-3">
+            <span class="fw-bold text-dark"><i class="bi bi-journal-text text-primary me-2"></i>Recent Security &amp; Activity Audit Logs</span>
+            <span class="badge bg-light text-secondary border">Immutable Log</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>User ID</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_logs %}
+                        <tr>
+                            <td class="small text-secondary">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td><span class="badge bg-secondary-subtle text-dark border font-monospace">{{ log.action }}</span></td>
+                            <td class="small">{{ log.user_id if log.user_id else 'System/Deleted' }}</td>
+                            <td class="small">{{ log.target_type }}:{{ log.target_id }}</td>
+                            <td class="small text-muted font-monospace" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ log.details|tojson if log.details else '-' }}
+                            </td>
+                            <td class="small text-secondary">{{ log.ip_address or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No audit logs recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

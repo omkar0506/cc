@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile & Account Settings - Adaptive Interviewer{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">Profile &amp; Account Settings</h2>
+        <p class="text-secondary mb-0">Manage your candidate information, security credentials, and data privacy options.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Form Column -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <span class="fw-bold text-dark"><i class="bi bi-person-lines-fill text-primary me-2"></i>Personal &amp; Academic Information</span>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('candidate.profile') }}">
+                        {{ profile_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ profile_form.full_name.label.text }}</label>
+                            {{ profile_form.full_name(class="form-control" + (" is-invalid" if profile_form.full_name.errors else "")) }}
+                            {% for err in profile_form.full_name.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ profile_form.phone.label.text }}</label>
+                                {{ profile_form.phone(class="form-control", placeholder="+1 (555) 012-3456") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ profile_form.graduation_year.label.text }}</label>
+                                {{ profile_form.graduation_year(class="form-control", placeholder="e.g. 2026") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ profile_form.headline.label.text }}</label>
+                            {{ profile_form.headline(class="form-control", placeholder="e.g. Senior Computer Engineering Student | Backend & Python") }}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ profile_form.education_level.label.text }}</label>
+                                {{ profile_form.education_level(class="form-control", placeholder="e.g. B.Tech / B.E.") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ profile_form.institution.label.text }}</label>
+                                {{ profile_form.institution(class="form-control", placeholder="e.g. College of Engineering") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ profile_form.bio.label.text }}</label>
+                            {{ profile_form.bio(class="form-control", rows=4, placeholder="Brief overview of your interests and technical projects...") }}
+                        </div>
+
+                        <button type="submit" name="profile_submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i>Save Profile Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security & Privacy Column -->
+        <div class="col-lg-5">
+            <!-- Password Change -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <span class="fw-bold text-dark"><i class="bi bi-key-fill text-primary me-2"></i>Change Password</span>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('candidate.profile') }}">
+                        {{ password_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ password_form.current_password.label.text }}</label>
+                            {{ password_form.current_password(class="form-control") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ password_form.new_password.label.text }}</label>
+                            {{ password_form.new_password(class="form-control") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ password_form.confirm_password.label.text }}</label>
+                            {{ password_form.confirm_password(class="form-control") }}
+                        </div>
+
+                        <button type="submit" name="password_submit" class="btn btn-outline-primary w-100 fw-semibold">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy & Data Governance (Section 5 & 25) -->
+            <div class="card shadow-sm mb-4 border-start border-4 border-info">
+                <div class="card-header py-3">
+                    <span class="fw-bold text-dark"><i class="bi bi-shield-lock-fill text-info me-2"></i>Data Privacy &amp; Governance</span>
+                </div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-3">
+                        In compliance with system data isolation standards, you may export all stored personal profile, interview sessions, and resume verification records at any time.
+                    </p>
+                    <a href="{{ url_for('candidate.export_data') }}" class="btn btn-outline-secondary btn-sm w-100 mb-3">
+                        <i class="bi bi-download me-1"></i>Export My Data (JSON)
+                    </a>
+
+                    <hr class="my-3">
+
+                    <h6 class="fw-bold text-danger small mb-1"><i class="bi bi-trash3 me-1"></i>Permanent Account Deletion</h6>
+                    <p class="small text-muted mb-3">
+                        Permanently deletes your account, personal data, interview history, scores, and private resume files.
+                    </p>
+
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        Delete Account...
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deletion Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('candidate.delete_account') }}">
+                {{ delete_form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger fw-bold" id="deleteAccountModalLabel">Confirm Permanent Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger small">
+                        <strong>Warning:</strong> This action cannot be undone. All resume files, evaluations, and evidence records will be wiped from MySQL and storage.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">{{ delete_form.confirm_phrase.label.text }}</label>
+                        {{ delete_form.confirm_phrase(class="form-control", placeholder="DELETE") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">{{ delete_form.password.label.text }}</label>
+                        {{ delete_form.password(class="form-control") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    {{ delete_form.submit(class="btn btn-danger btn-sm fw-semibold") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

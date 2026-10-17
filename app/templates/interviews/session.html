@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Interview - Question {{ active_sq.order_index }} of {{ session.total_questions_limit }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Top Progress and Control Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+            <h4 class="fw-bold text-dark mb-0">
+                Question {{ active_sq.order_index }} of {{ session.total_questions_limit }}
+            </h4>
+            <div class="text-secondary small">
+                Target Role: <strong class="text-dark">{{ session.job_role.title }}</strong> &bull; Mode: <span class="text-capitalize">{{ session.category }}</span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+            <!-- Badges -->
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                <i class="bi bi-tag me-1"></i>{{ active_sq.skill.name }}
+            </span>
+
+            {% if active_sq.difficulty_served == 'easy' %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Easy</span>
+            {% elif active_sq.difficulty_served == 'medium' %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Medium</span>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Hard</span>
+            {% endif %}
+
+            {% if active_sq.is_followup %}
+                <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                    <i class="bi bi-arrow-return-right me-1"></i>Follow-Up
+                </span>
+            {% endif %}
+
+            <!-- Pause Button -->
+            <form method="POST" action="{{ url_for('interviews.pause_session', session_uuid=session.session_uuid) }}" class="d-inline ms-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Pause session and resume later">
+                    <i class="bi bi-pause-circle me-1"></i>Pause
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress mb-4" style="height: 6px;">
+        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (active_sq.order_index / session.total_questions_limit) * 100 }}%;"></div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Question & Answer Area -->
+        <div class="col-lg-8">
+            <!-- Question Card -->
+            <div class="card shadow-sm p-4 mb-4 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Interview Question</span>
+                    <span class="badge bg-light text-secondary border font-monospace text-capitalize">{{ question.question_type }}</span>
+                </div>
+
+                <h5 class="fw-bold text-dark lh-base mb-3">{{ question.question_text }}</h5>
+
+                {% if question.question_type == 'code-written' %}
+                <div class="alert alert-light border small text-secondary py-2 px-3 mb-0">
+                    <i class="bi bi-code-slash text-primary me-1"></i>
+                    <strong>Written Code Mode:</strong> Provide clean code logic, handle edge cases, and describe time/space complexity. (Note: code is evaluated for algorithmic logic and completeness; it is not executed in an isolated runtime sandbox).
+                </div>
+                {% elif question.question_type == 'hr' %}
+                <div class="alert alert-light border small text-secondary py-2 px-3 mb-0">
+                    <i class="bi bi-star text-warning me-1"></i>
+                    <strong>Behavioral Tip:</strong> Structure your response using the <strong>STAR</strong> method: <em>Situation</em>, <em>Task</em>, <em>Action</em>, and <em>Result</em>.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Answer Submission Form -->
+            <div class="card shadow-sm p-4">
+                <form method="POST" action="{{ url_for('interviews.live_session', session_uuid=session.session_uuid) }}" id="answerForm">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary d-flex justify-content-between">
+                            <span>{{ form.answer_text.label.text }}</span>
+                            <span id="wordCount" class="text-muted" style="font-size: 0.78rem;">0 words</span>
+                        </label>
+                        {{ form.answer_text(
+                            class="form-control font-monospace" if question.question_type == 'code-written' else "form-control",
+                            rows=10,
+                            placeholder="Type your structured answer here. Elaborate with core technical principles, practical applications, or code snippets...",
+                            id="answerTextarea",
+                            autofocus=true
+                        ) }}
+                        {% for err in form.answer_text.errors %}<div class="text-danger small mt-1">{{ err }}</div>{% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <div class="text-muted small" style="font-size: 0.78rem;">
+                            <i class="bi bi-shield-check text-success me-1"></i>
+                            Your response is persisted to MySQL before rubric evaluation.
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold py-2" id="submitBtn">
+                            Submit Answer &rarr;
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar: Session Information -->
+        <div class="col-lg-4">
+            <!-- Adaptive State Audit -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-light">
+                    <span class="fw-bold text-dark small"><i class="bi bi-cpu text-primary me-2"></i>Adaptive Decision Engine</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted small fw-semibold">Selection Policy:</div>
+                        <span class="badge bg-secondary-subtle text-dark border font-monospace mt-1">
+                            {{ active_sq.adaptive_decision or 'Direct Selection' }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <div class="text-muted small fw-semibold">Decision Rationalization:</div>
+                        <p class="small text-secondary mb-0 mt-1">
+                            {{ active_sq.adaptive_reason or 'Selected to assess primary competency requirements.' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rubric Criteria Preview -->
+            <div class="card shadow-sm">
+                <div class="card-header py-3 bg-light">
+                    <span class="fw-bold text-dark small"><i class="bi bi-list-check text-success me-2"></i>Evaluated Rubric Criteria</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush small">
+                        {% if question.rubric %}
+                            {% for crit, weight in question.rubric.items() %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="text-capitalize">{{ crit|replace('_', ' ') }}</span>
+                                    <span class="badge bg-light text-dark border">{{ (weight * 100)|round|int }}%</span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-muted">Standard technical correctness and clarity rubric.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('answerTextarea');
+    const wordCountSpan = document.getElementById('wordCount');
+
+    function updateCount() {
+        const text = (textarea.value || '').trim();
+        const count = text ? text.split(/\s+/).length : 0;
+        wordCountSpan.textContent = `${count} word${count === 1 ? '' : 's'}`;
+    }
+
+    if (textarea && wordCountSpan) {
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    }
+});
+</script>
+{% endblock %}

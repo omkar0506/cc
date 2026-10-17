@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Question Bank Management - Administrator Portal{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-question-square-fill text-primary me-2"></i>Question Bank Repository
+            </h2>
+            <p class="text-secondary mb-0">Manage rubrics, expected concepts, difficulty levels, and review pending questions.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Portal
+            </a>
+            <a href="{{ url_for('admin.question_create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Add New Question
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="card shadow-sm p-3 mb-4">
+        <form method="GET" action="{{ url_for('admin.questions') }}" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm" placeholder="Search question text...">
+            </div>
+            <div class="col-md-2">
+                <select name="role_id" class="form-select form-select-sm">
+                    <option value="">All Roles</option>
+                    {% for r in roles %}
+                        <option value="{{ r.id }}" {% if selected_role_id == r.id %}selected{% endif %}>{{ r.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="skill_id" class="form-select form-select-sm">
+                    <option value="">All Skills</option>
+                    {% for s in skills %}
+                        <option value="{{ s.id }}" {% if selected_skill_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="difficulty" class="form-select form-select-sm">
+                    <option value="">All Difficulties</option>
+                    <option value="easy" {% if selected_diff == 'easy' %}selected{% endif %}>Easy</option>
+                    <option value="medium" {% if selected_diff == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="hard" {% if selected_diff == 'hard' %}selected{% endif %}>Hard</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <select name="approved" class="form-select form-select-sm">
+                    <option value="">Status</option>
+                    <option value="approved" {% if selected_approved == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="pending" {% if selected_approved == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm px-3 flex-grow-1">Filter</button>
+                <a href="{{ url_for('admin.questions') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center py-3">
+            <span class="fw-bold text-dark">Questions ({{ questions|length }})</span>
+            <span class="badge bg-light text-secondary border">Explicit Rubrics &amp; Fallback Grounded</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Role &amp; Skill</th>
+                            <th>Type &amp; Level</th>
+                            <th>Question Text Preview</th>
+                            <th>Origin</th>
+                            <th>Approval</th>
+                            <th>Pool</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in questions %}
+                        <tr>
+                            <td class="font-monospace small">#{{ q.id }}</td>
+                            <td>
+                                <div class="fw-bold text-dark small">{{ q.job_role.title if q.job_role else 'N/A' }}</div>
+                                <div class="text-muted small">{{ q.skill.name if q.skill else 'N/A' }}</div>
+                            </td>
+                            <td>
+                                <div>
+                                    {% if q.difficulty == 'easy' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Easy</span>
+                                    {% elif q.difficulty == 'medium' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Hard</span>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-light text-secondary border text-capitalize mt-1" style="font-size: 0.7rem;">
+                                    {{ q.question_type }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-dark small" style="max-width: 320px; max-height: 4.5em; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ q.question_text }}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-bullseye me-1"></i>{{ q.expected_concepts|length }} expected concepts
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace text-uppercase" style="font-size: 0.7rem;">
+                                    {{ q.origin }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if q.is_approved %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Approved</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle fw-semibold">Pending Review</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if q.is_active %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-muted border">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    {% if not q.is_approved %}
+                                    <form method="POST" action="{{ url_for('admin.question_approve', question_id=q.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-success btn-sm py-1 px-2" title="Approve Question">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    <form method="POST" action="{{ url_for('admin.question_toggle_status', question_id=q.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-{% if q.is_active %}warning{% else %}secondary{% endif %} btn-sm py-1 px-2" title="Toggle Active">
+                                            <i class="bi bi-power"></i>
+                                        </button>
+                                    </form>
+
+                                    <a href="{{ url_for('admin.question_edit', question_id=q.id) }}" class="btn btn-outline-secondary btn-sm py-1 px-2" title="Edit Question">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No questions found matching criteria.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

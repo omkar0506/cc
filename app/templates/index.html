@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Adaptive Interviewer & Skill Verification System{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Hero Header -->
+    <div class="row align-items-center mb-5 pb-3">
+        <div class="col-lg-7">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold mb-3">
+                <i class="bi bi-stars me-1"></i> Computer Engineering Major Project (v1 MVP)
+            </span>
+            <h1 class="display-5 fw-bold text-dark lh-sm mb-3">
+                AI-Powered Adaptive Interviewer &amp; Candidate Evaluation System
+            </h1>
+            <p class="lead text-secondary mb-4">
+                Verify technical skill claims with real interview evidence. Connect resume claims, candidate confidence self-ratings, and rubric-driven adaptive evaluations without black-box scores.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_candidate %}
+                        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-shield-lock me-2"></i>Go to Admin Portal
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-person-plus me-2"></i>Start Free Practice
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+            <div class="card shadow-sm p-4 border">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-diagram-3-fill text-primary me-2"></i>Core Innovation Architecture</h5>
+                <ol class="small text-secondary ps-3 mb-0 d-flex flex-column gap-2">
+                    <li><strong>Resume Claim Extraction:</strong> Parse skills from PDF with verbatim evidence snippets.</li>
+                    <li><strong>Role Requirement Matching:</strong> Map claims against required competencies.</li>
+                    <li><strong>Confidence Self-Rating:</strong> Calibrate pre-interview confidence (1 to 5).</li>
+                    <li><strong>Adaptive State Machine:</strong> Dynamic question difficulty &amp; targeted follow-ups.</li>
+                    <li><strong>Rubric Evaluation:</strong> Explainable criterion breakdown with deterministic fallback.</li>
+                    <li><strong>4 Evidence States:</strong> Fair classification without accusatory labels.</li>
+                    <li><strong>Actionable Learning:</strong> Gap-driven learning checklist and attempt comparisons.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Evidence States Showcase -->
+    <div class="row g-3 mb-5">
+        <div class="col-12">
+            <h4 class="fw-bold text-dark mb-1">Explainable Evidence Classification</h4>
+            <p class="text-secondary small mb-3">The engine never labels candidates dishonest. Every skill is categorized into one of four distinct transparent states:</p>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 p-3 border-start border-4 border-success">
+                <span class="badge badge-demonstrated align-self-start mb-2 px-2 py-1">Demonstrated</span>
+                <p class="small text-secondary mb-0">&ge; 2 evaluated answers, average score &ge; 70%, including at least one medium or hard difficulty answer.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 p-3 border-start border-4 border-warning">
+                <span class="badge badge-partially-demonstrated align-self-start mb-2 px-2 py-1">Partially demonstrated</span>
+                <p class="small text-secondary mb-0">Average ratio between 40% and 69%, or &ge; 70% with only a single easy foundational question.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 p-3 border-start border-4 border-info">
+                <span class="badge badge-needs-further-assessment align-self-start mb-2 px-2 py-1">Needs further assessment</span>
+                <p class="small text-secondary mb-0">Inconclusive evidence, such as ratio &lt; 40% on one question or conflicting variance across answers.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 p-3 border-start border-4 border-secondary">
+                <span class="badge badge-not-yet-assessed align-self-start mb-2 px-2 py-1">Not yet assessed</span>
+                <p class="small text-secondary mb-0">Skill required by the job role but not yet encountered in completed interview questions.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seeded Job Roles Display -->
+    <div class="row mb-5">
+        <div class="col-12 mb-3">
+            <h4 class="fw-bold text-dark mb-1">Available Job Roles</h4>
+            <p class="text-secondary small mb-0">Pre-seeded with vetted question banks, rubric matrices, and competency weights.</p>
+        </div>
+
+        {% for role in roles %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm d-flex flex-column">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold text-dark mb-0">{{ role.title }}</h5>
+                        <span class="badge bg-light text-dark border">{{ role.experience_level }}</span>
+                    </div>
+                    <p class="card-text text-secondary small mb-3">{{ role.description }}</p>
+                    
+                    <h6 class="fw-semibold small text-dark mb-2">Target Competencies:</h6>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        {% for jrs in role.role_skills %}
+                            <span class="badge bg-white text-secondary border small">
+                                {{ jrs.skill.name }}
+                                {% if jrs.is_required %}<span class="text-danger">*</span>{% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top pt-2 pb-3">
+                    {% if current_user.is_authenticated and current_user.is_candidate %}
+                        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-outline-primary btn-sm w-100">
+                            Configure Practice Interview
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm w-100">
+                            Start Practicing This Role
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No active job roles found. Run <code>flask seed-data</code> to populate initial roles and questions.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

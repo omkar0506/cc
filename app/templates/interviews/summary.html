@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Evaluation Summary - {{ session.job_role.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('candidate.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('interviews.history') }}">History</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Session Summary</li>
+        </ol>
+    </nav>
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm mb-4 border-start border-4 border-success">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-semibold mb-2">
+                        <i class="bi bi-check-circle-fill me-1"></i>Interview Completed
+                    </span>
+                    <h3 class="fw-bold text-dark mb-1">{{ session.job_role.title }}</h3>
+                    <p class="text-secondary small mb-0">
+                        Category: <strong class="text-dark text-capitalize">{{ session.category }}</strong> &bull;
+                        Completed on {{ session.completed_at.strftime('%b %d, %Y at %H:%M') if session.completed_at else session.updated_at.strftime('%b %d, %Y') }}
+                    </p>
+                </div>
+                <div class="text-md-end">
+                    <div class="text-muted small fw-semibold text-uppercase">Overall Score</div>
+                    <div class="display-6 fw-bold text-primary">
+                        {{ "%.1f"|format(session.overall_score or 0.0) }} <span class="fs-4 text-muted">/ 10.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question-by-Question Feedback Breakdown -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+                <i class="bi bi-chat-left-text-fill text-primary me-2"></i>Question-by-Question Evaluation &amp; Feedback
+            </span>
+            <span class="badge bg-light text-secondary border">Deterministic &amp; Explainable</span>
+        </div>
+        <div class="card-body p-4">
+            {% for sq in sq_list %}
+                <div class="border rounded p-3 mb-4 {% if loop.last %}mb-0{% endif %}">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2 pb-2 border-bottom">
+                        <div>
+                            <span class="badge bg-light text-dark border me-1">Q{{ sq.order_index }}</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">{{ sq.skill.name }}</span>
+                            {% if sq.difficulty_served == 'easy' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Easy</span>
+                            {% elif sq.difficulty_served == 'medium' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Medium</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Hard</span>
+                            {% endif %}
+                            {% if sq.is_followup %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle">Follow-Up</span>
+                            {% endif %}
+                        </div>
+
+                        {% if sq.answer and sq.answer.evaluation %}
+                        <div class="fw-bold text-dark">
+                            Score: <span class="text-primary">{{ "%.1f"|format(sq.answer.evaluation.total_score) }}</span> / {{ "%.1f"|format(sq.answer.evaluation.max_score) }}
+                            <small class="text-muted">({{ (sq.answer.evaluation.score_ratio * 100)|round|int }}%)</small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Question Text -->
+                    <h6 class="fw-bold text-dark mt-2 mb-3">{{ sq.question.question_text }}</h6>
+
+                    <!-- Candidate Answer -->
+                    <div class="bg-light p-3 rounded mb-3">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Your Submitted Response:</div>
+                        <p class="small text-secondary font-monospace mb-0" style="white-space: pre-wrap;">{{ sq.answer.answer_text if sq.answer else 'No answer recorded.' }}</p>
+                    </div>
+
+                    {% if sq.answer and sq.answer.evaluation %}
+                    {% set ev = sq.answer.evaluation %}
+                    <div class="row g-3">
+                        <!-- Rubric Criteria Breakdown -->
+                        <div class="col-md-6">
+                            <div class="card p-3 h-100 border bg-white">
+                                <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-card-checklist text-primary me-1"></i>Rubric Criterion Breakdown</h6>
+                                <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                                    {% for crit, score in ev.criterion_scores.items() %}
+                                    <div>
+                                        <div class="d-flex justify-content-between text-capitalize mb-1">
+                                            <span class="fw-semibold text-secondary">{{ crit|replace('_', ' ') }}</span>
+                                            <span class="fw-bold text-dark">{{ score }} pts</span>
+                                        </div>
+                                        {% if ev.criterion_explanations and ev.criterion_explanations.get(crit) %}
+                                            <div class="text-muted" style="font-size: 0.75rem;">{{ ev.criterion_explanations.get(crit) }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Feedback, Quotes & Missing Concepts -->
+                        <div class="col-md-6">
+                            <div class="card p-3 h-100 border bg-white">
+                                <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Evidence &amp; Analysis</h6>
+                                
+                                {% if ev.supporting_quotes %}
+                                <div class="mb-2">
+                                    <div class="text-muted fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Supporting Answer Quotes:</div>
+                                    <ul class="ps-3 mb-1 small text-success" style="font-size: 0.78rem;">
+                                        {% for quote in ev.supporting_quotes %}
+                                            <li>"{{ quote }}"</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if ev.missing_concepts %}
+                                <div class="mb-2">
+                                    <div class="text-muted fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Missing Expected Concepts:</div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        {% for mc in ev.missing_concepts %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.72rem;">{{ mc }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if ev.improvement_suggestions %}
+                                <div>
+                                    <div class="text-muted fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Actionable Improvement:</div>
+                                    <ul class="ps-3 mb-0 small text-secondary" style="font-size: 0.78rem;">
+                                        {% for imp in ev.improvement_suggestions %}
+                                            <li>{{ imp }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adaptive Audit Trail Note -->
+                    <div class="mt-2 text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Adaptive Decision:</strong> {{ sq.adaptive_decision or 'Direct' }} &mdash; {{ sq.adaptive_reason or 'Competency assessment.' }}
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('interviews.history') }}" class="btn btn-outline-secondary">
+            &larr; View All Attempts
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-outline-primary">
+                Candidate Dashboard
+            </a>
+            <a href="{{ url_for('interviews.configure') }}" class="btn btn-primary px-4 fw-semibold">
+                Start Another Practice Session &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

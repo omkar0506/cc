@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Roles Management - Administrator Portal{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-briefcase-fill text-primary me-2"></i>Job Roles &amp; Requirements
+            </h2>
+            <p class="text-secondary mb-0">Configure target engineering roles, competency importance weights, and difficulty mixes.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Portal
+            </a>
+            <a href="{{ url_for('admin.role_create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Add Custom Role
+            </a>
+        </div>
+    </div>
+
+    <!-- Job Roles Table -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center py-3">
+            <span class="fw-bold text-dark">Configured Roles ({{ roles|length }})</span>
+            <span class="badge bg-light text-secondary border">Relational Competency Anchoring</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Role Title &amp; Slug</th>
+                            <th>Experience Level</th>
+                            <th>Skills Linked</th>
+                            <th>Difficulty Mix</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in roles %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ r.title }}</div>
+                                <div class="text-muted small font-monospace">/jobs/{{ r.slug }}</div>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ r.experience_level }}</span></td>
+                            <td>
+                                <a href="{{ url_for('admin.role_skills_manage', role_id=r.id) }}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none">
+                                    {{ r.role_skills|length }} Competencies
+                                </a>
+                            </td>
+                            <td>
+                                <div class="small text-secondary">
+                                    E:{{ r.difficulty_distribution.get('easy', 30) }}% |
+                                    M:{{ r.difficulty_distribution.get('medium', 50) }}% |
+                                    H:{{ r.difficulty_distribution.get('hard', 20) }}%
+                                </div>
+                            </td>
+                            <td>
+                                {% if r.is_active %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{{ url_for('admin.role_skills_manage', role_id=r.id) }}" class="btn btn-outline-primary btn-sm py-1 px-2" title="Manage Skill Requirements">
+                                        <i class="bi bi-diagram-3 me-1"></i>Skills
+                                    </a>
+                                    <a href="{{ url_for('admin.role_edit', role_id=r.id) }}" class="btn btn-outline-secondary btn-sm py-1 px-2" title="Edit Metadata">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.role_toggle_status', role_id=r.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-{% if r.is_active %}warning{% else %}success{% endif %} btn-sm py-1 px-2" title="Toggle Active">
+                                            <i class="bi bi-power"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No job roles found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

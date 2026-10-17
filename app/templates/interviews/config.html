@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Configure Practice Interview - Adaptive Interviewer{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-sm p-4">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-semibold mb-2">
+                            Step 1 of 2: Setup
+                        </span>
+                        <h3 class="fw-bold text-dark mt-1 mb-1">Configure Interview Session</h3>
+                        <p class="text-muted small">Select your target engineering role, format, and interview parameters</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('interviews.configure') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.job_role_id.label.text }}</label>
+                            {{ form.job_role_id(class="form-select form-select-lg") }}
+                            <div class="form-text small">Each role includes a calibrated competency matrix and vetted question pool.</div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.category.label.text }}</label>
+                                {{ form.category(class="form-select") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.target_difficulty.label.text }}</label>
+                                {{ form.target_difficulty(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.total_questions_limit.label.text }}</label>
+                                {{ form.total_questions_limit(class="form-control") }}
+                                <div class="form-text small">Choose between 3 and 10 questions.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-secondary">{{ form.resume_id.label.text }}</label>
+                                {{ form.resume_id(class="form-select") }}
+                                <div class="form-text small">Optional: Links resume claims to compare against interview evidence.</div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-light border small text-muted my-4">
+                            <i class="bi bi-info-circle text-primary me-1"></i>
+                            <strong>Next Step:</strong> You will rate your confidence (1 to 5) in each required competency. Our adaptive state machine will dynamically adjust difficulty based on your answers.
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary py-2 fw-semibold fs-6") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

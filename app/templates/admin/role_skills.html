@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Competencies for {{ role.title }} - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-diagram-3-fill text-primary me-2"></i>Competency Matrix: {{ role.title }}
+            </h2>
+            <p class="text-secondary mb-0">Define required vs optional skills and calibrated importance weights ($1.0 - 5.0$).</p>
+        </div>
+        <a href="{{ url_for('admin.roles') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Roles
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Add Skill Link Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm p-3">
+                <div class="card-body">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Link New Competency</h5>
+
+                    {% if available_skills %}
+                    <form method="POST" action="{{ url_for('admin.role_skills_manage', role_id=role.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.skill_id.label.text }}</label>
+                            {{ form.skill_id(class="form-select") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.importance_weight.label.text }}</label>
+                            {{ form.importance_weight(class="form-control", step="0.5") }}
+                            <div class="form-text small">Scale 1.0 (baseline) to 5.0 (critical core).</div>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            {{ form.is_required(class="form-check-input") }}
+                            <label class="form-check-label small fw-semibold text-secondary" for="{{ form.is_required.id }}">
+                                {{ form.is_required.label.text }}
+                            </label>
+                            <div class="form-text small">Required skills are prioritized in interview coverage.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+                        </div>
+                    </form>
+                    {% else %}
+                        <div class="alert alert-info small mb-0">
+                            All registered skills are currently linked to this role, or no additional skills exist in the registry.
+                            <a href="{{ url_for('admin.skill_create') }}" class="fw-semibold">Add new skill</a>.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Skills Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <span class="fw-bold text-dark">Linked Competencies ({{ role.role_skills|length }})</span>
+                    <span class="badge bg-light text-secondary border">Active Requirements</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Skill / Competency</th>
+                                    <th>Category</th>
+                                    <th>Requirement</th>
+                                    <th>Weight</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for jrs in role.role_skills %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ jrs.skill.name }}</div>
+                                        {% if jrs.skill.aliases %}
+                                            <div class="text-muted small" style="font-size: 0.75rem;">Aliases: {{ jrs.skill.aliases|join(', ') }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border text-capitalize">{{ jrs.skill.category }}</span></td>
+                                    <td>
+                                        {% if jrs.is_required %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">Required</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-secondary border">Optional</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-primary">{{ "%.1f"|format(jrs.importance_weight) }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <form method="POST" action="{{ url_for('admin.role_skill_remove', role_id=role.id, skill_id=jrs.skill_id) }}" class="d-inline" onsubmit="return confirm('Remove competency link from this role?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2" title="Remove Link">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No competencies linked to this role yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
